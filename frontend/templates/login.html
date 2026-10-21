@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AEC - Electronic Voting Platform</title>
+    <style>
+        /* Basic page styling */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top header bar like government sites */
+        .header {
+            background-color: #1a1a6e;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .header p {
+            font-size: 13px;
+            opacity: 0.85;
+        }
+
+        /* Main content area */
+        .main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        /* Login card */
+        .login-card {
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            width: 100%;
+            max-width: 420px;
+            overflow: hidden;
+        }
+
+        .login-card-header {
+            background-color: #1a1a6e;
+            color: white;
+            padding: 20px 25px;
+        }
+
+        .login-card-header h2 {
+            font-size: 18px;
+        }
+
+        .login-card-header p {
+            font-size: 13px;
+            margin-top: 4px;
+            opacity: 0.85;
+        }
+
+        .login-card-body {
+            padding: 25px;
+        }
+
+        /* Form styling */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 6px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #333;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #1a1a6e;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 11px;
+            background-color: #1a1a6e;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 15px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
+        .login-btn:hover {
+            background-color: #2a2a9e;
+        }
+
+        /* Error and success messages */
+        .message {
+            padding: 10px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .message.error {
+            background-color: #fde8e8;
+            color: #c0392b;
+            border-left: 4px solid #c0392b;
+        }
+
+        .message.success {
+            background-color: #e8f5e9;
+            color: #27ae60;
+            border-left: 4px solid #27ae60;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 15px;
+            font-size: 12px;
+            color: #888;
+            background-color: #e8e8e8;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top header -->
+    <div class="header">
+        <div>
+            <h1>Australian Electoral Commission</h1>
+            <p>Electronic Voting Platform</p>
+        </div>
+    </div>
+
+    <!-- Login form -->
+    <div class="main">
+        <div class="login-card">
+
+            <div class="login-card-header">
+                <h2>Voter Login</h2>
+                <p>Please enter your credentials to access your ballot</p>
+            </div>
+
+            <div class="login-card-body">
+
+                <!-- Message box for errors or success -->
+                <div id="message" class="message"></div>
+
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="voter_id">Voter ID</label>
+                        <input
+                            type="text"
+                            id="voter_id"
+                            placeholder="Enter your voter ID"
+                            maxlength="20"
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input
+                            type="password"
+                            id="password"
+                            placeholder="Enter your password"
+                            maxlength="128"
+                            required>
+                    </div>
+
+                    <button type="submit" class="login-btn">Login</button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        &copy; 2024 Australian Electoral Commission. This is a prototype system for educational purposes.
+    </div>
+
+    <script>
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
+            e.preventDefault()
+
+            const voter_id = document.getElementById('voter_id').value.trim()
+            const password = document.getElementById('password').value.trim()
+
+            if (!voter_id || !password) {
+                showMessage('Please fill in all fields', 'error')
+                return
+            }
+
+            try {
+                const response = await fetch('/api/auth/voter/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ voter_id, password })
+                })
+
+                const result = await response.json()
+
+                if (response.ok) {
+                    // Store token in sessionStorage so it clears when browser closes (SR-19)
+                    sessionStorage.setItem('voter_token', result.token)
+                    showMessage('Login successful. Redirecting...', 'success')
+                    setTimeout(() => {
+                        window.location.href = '/ballot'
+                    }, 1000)
+                } else {
+                    showMessage(result.error, 'error')
+                }
+
+            } catch (error) {
+                showMessage('Something went wrong. Please try again.', 'error')
+            }
+        })
+
+        function showMessage(text, type) {
+            const box = document.getElementById('message')
+            box.textContent = text
+            box.className = 'message ' + type
+            box.style.display = 'block'
+        }
+    </script>
+
+</body>
+</html>
