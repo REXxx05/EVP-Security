@@ -54,6 +54,19 @@ def create_app():
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(ballot_bp, url_prefix='/api/ballot')
 
+    # Frontend page routes
+    # These serve the HTML pages to the browser
+
+    from flask import render_template, redirect, url_for
+
+    @app.route('/')
+    def index():
+        return render_template('login.html')
+
+    @app.route('/ballot')
+    def ballot():
+        return render_template('ballot.html')
+    
     # Basic error handlers
     # We keep error messages vague on purpose so we dont leak system info
     @app.errorhandler(404)
