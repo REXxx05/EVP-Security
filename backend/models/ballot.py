@@ -1,7 +1,7 @@
-from app import db
+from extensions import db
 
-# This model stores submitted ballots
-# Voter identity is separated from ballot content (SR-16)
+# Stores submitted ballots
+# Voter identity is NOT stored here to protect anonymity (SR-16)
 
 class Ballot(db.Model):
     __tablename__ = 'ballots'

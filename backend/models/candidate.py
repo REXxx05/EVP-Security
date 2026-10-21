@@ -1,6 +1,6 @@
-from app import db
+from extensions import db
 
-# This model stores candidates for each electoral division
+# Stores candidates for each electoral division
 
 class Candidate(db.Model):
     __tablename__ = 'candidates'

@@ -11,15 +11,13 @@ auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/voter/login', methods=['POST'])
 def voter_login():
-    # Voter login - checks credentials and returns a session token
-    # SR-07: also checks if voter is enrolled before giving access
-
-    from app import db
+    # Handles voter login and issues a JWT session token
+    # SR-07: Checks voter is enrolled before giving access
+    # SR-03: Each voter gets their own isolated session token
     from models.voter import Voter
 
     data = request.get_json()
 
-    # Make sure all required fields are provided
     if not data or not data.get('voter_id') or not data.get('password'):
         return jsonify({'error': 'Please enter your voter ID and password'}), 400
 
@@ -29,12 +27,11 @@ def voter_login():
     # Find the voter in the database
     voter = Voter.query.filter_by(voter_id=voter_id).first()
 
-    # Check if voter exists and password is correct
-    # bcrypt handles the password comparison securely
+    # Check password using bcrypt secure comparison
     if not voter or not bcrypt.checkpw(password.encode(), voter.password_hash.encode()):
         return jsonify({'error': 'Incorrect voter ID or password'}), 401
 
-    # SR-07: Make sure voter is enrolled and eligible
+    # SR-07: Check voter is enrolled and eligible
     if not voter.is_enrolled:
         return jsonify({'error': 'You are not enrolled to vote in this election'}), 403
 
@@ -58,9 +55,7 @@ def voter_login():
 @auth_bp.route('/voter/logout', methods=['POST'])
 @token_required
 def voter_logout():
-    # Logs the voter out
-    # We tell the client to delete their token
-    # In production we would also blacklist the token server side
+    # Logs the voter out by telling the client to delete their token
     return jsonify({'message': 'You have been logged out successfully'}), 200
 
 
@@ -68,13 +63,10 @@ def voter_logout():
 def admin_login():
     # Admin login requires username, password AND a TOTP code
     # SR-10: Two factor authentication for all admin accounts
-
-    from app import db
     from models.admin_user import AdminUser
 
     data = request.get_json()
 
-    # All three fields are required for admin login
     if not data or not data.get('username') or not data.get('password') or not data.get('totp_code'):
         return jsonify({'error': 'Username, password and MFA code are all required'}), 400
 
@@ -85,11 +77,11 @@ def admin_login():
     # Find the admin in the database
     admin = AdminUser.query.filter_by(username=username).first()
 
-    # Check username and password first
+    # Check username and password
     if not admin or not bcrypt.checkpw(password.encode(), admin.password_hash.encode()):
         return jsonify({'error': 'Incorrect username or password'}), 401
 
-    # SR-10: Verify the six digit TOTP code from the authenticator app
+    # SR-10: Verify the six digit TOTP code
     totp = pyotp.TOTP(admin.totp_secret)
     if not totp.verify(totp_code):
         return jsonify({'error': 'Incorrect MFA code. Please try again.'}), 401

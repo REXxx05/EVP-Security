@@ -1,64 +1,44 @@
-from flask import Flask, jsonify
-from flask_sqlalchemy import SQLAlchemy
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
+from flask import Flask, jsonify, render_template
+from extensions import db, limiter
 
-# Setting up the database and rate limiter
-# These are created here so other files can import them easily
-db = SQLAlchemy()
-limiter = Limiter(key_func=get_remote_address)
+# This is the main Flask application factory
+# We use a factory function so the app can be created with different configs
 
 def create_app():
-    
     app = Flask(
         __name__,
         template_folder='../frontend/templates',
         static_folder='../frontend/static'
     )
 
-    # Load settings from config.py
+    # Load all settings from config.py
     app.config.from_object('config.Config')
 
-    # Connect the database and limiter to our app
+    # Connect database and rate limiter to the app
     db.init_app(app)
     limiter.init_app(app)
 
-    # SR-01: Add security headers to every response the server sends back
-    # This is part of the Defence in Depth security pattern
+    # SR-01: Add security headers to every response
+    # This is the Defence in Depth pattern - security at every layer
     @app.after_request
     def add_security_headers(response):
-        
-        # Tells browser to always use HTTPS
+        # Force browser to use HTTPS only
         response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
-        
-        # Stops the page being put inside an iframe which prevents clickjacking
+        # Prevent clickjacking by blocking iframes
         response.headers['X-Frame-Options'] = 'DENY'
-        
-        # Stops browser from trying to guess file types
+        # Prevent browser from guessing content types
         response.headers['X-Content-Type-Options'] = 'nosniff'
-        
-        # Only allows content from our own server
-        response.headers['Content-Security-Policy'] = "default-src 'self'"
-        
+        # Allow inline scripts and styles for prototype
+        # In production this would be stricter
+        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
         return response
 
-    # SR-08: Simple health check so we can monitor if the system is up
+    # SR-08: Health check endpoint for monitoring
     @app.route('/health')
     def health_check():
         return jsonify({'status': 'ok'}), 200
 
-    # Register the different parts of the API
-    from routes.auth import auth_bp
-    from routes.ballot import ballot_bp
-
-    app.register_blueprint(auth_bp, url_prefix='/api/auth')
-    app.register_blueprint(ballot_bp, url_prefix='/api/ballot')
-
     # Frontend page routes
-    # These serve the HTML pages to the browser
-
-    from flask import render_template, redirect, url_for
-
     @app.route('/')
     def index():
         return render_template('login.html')
@@ -66,9 +46,14 @@ def create_app():
     @app.route('/ballot')
     def ballot():
         return render_template('ballot.html')
-    
-    # Basic error handlers
-    # We keep error messages vague on purpose so we dont leak system info
+
+    # Register API blueprints
+    from routes.auth import auth_bp
+    from routes.ballot import ballot_bp
+    app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    app.register_blueprint(ballot_bp, url_prefix='/api/ballot')
+
+    # Error handlers - we keep messages vague so we dont leak system details
     @app.errorhandler(404)
     def not_found(e):
         return jsonify({'error': 'Not found'}), 404
@@ -86,6 +71,10 @@ def create_app():
 if __name__ == '__main__':
     app = create_app()
     with app.app_context():
+        # Import all models so SQLAlchemy knows about them before creating tables
+        from models.voter import Voter
+        from models.admin_user import AdminUser
+        from models.ballot import Ballot, BallotHash
+        from models.candidate import Candidate
         db.create_all()
-    # Running with debug off for security
     app.run(debug=False, host='127.0.0.1', port=5000)

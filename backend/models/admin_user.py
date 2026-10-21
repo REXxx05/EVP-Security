@@ -1,4 +1,4 @@
-from app import db
+from extensions import db
 
 # This model represents an admin user who manages the system
 # SR-10: Admin accounts require TOTP MFA to log in
@@ -10,14 +10,13 @@ class AdminUser(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
 
-    # Password stored as bcrypt hash, never plaintext
+    # Password stored as bcrypt hash (SR-10)
     password_hash = db.Column(db.String(255), nullable=False)
 
     # Role controls what this admin can access (SR-11)
-    # Options are: aec_staff, commissioner_delegate, admin
     role = db.Column(db.String(50), nullable=False)
 
-    # Secret key used to generate TOTP codes for MFA (SR-10)
+    # TOTP secret for two factor authentication (SR-10)
     totp_secret = db.Column(db.String(255), nullable=False)
 
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
