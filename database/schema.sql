@@ -1,16 +1,15 @@
 -- Database schema for the Electronic Voting Platform
 
 -- Stores all registered voters
-CREATE TABLE IF NOT EXISTS voters (
+CREATE TABLE IF NOT EXISTS audit_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    voter_id TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    name_encrypted TEXT NOT NULL,
-    email_encrypted TEXT NOT NULL,
-    division TEXT NOT NULL,
-    has_voted INTEGER DEFAULT 0,
-    is_enrolled INTEGER DEFAULT 1,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    timestamp TIMESTAMP NOT NULL,
+    actor_pseudonym TEXT NOT NULL,
+    action TEXT NOT NULL,
+    details TEXT NOT NULL DEFAULT '',
+    prev_hash TEXT NOT NULL,
+    entry_hash TEXT UNIQUE NOT NULL,
+    retain_until TIMESTAMP NOT NULL
 );
 
 -- Stores candidates for each division

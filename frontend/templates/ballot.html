@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AEC - Cast Your Vote</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background-color: #1a1a6e;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 18px;
+        }
+
+        .header p {
+            font-size: 13px;
+            opacity: 0.85;
+        }
+
+        .logout-btn {
+            background: transparent;
+            border: 1px solid white;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .ballot-card {
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            width: 100%;
+            max-width: 560px;
+            overflow: hidden;
+        }
+
+        .ballot-card-header {
+            background-color: #1a1a6e;
+            color: white;
+            padding: 20px 25px;
+        }
+
+        .ballot-card-header h2 {
+            font-size: 18px;
+        }
+
+        .ballot-card-header p {
+            font-size: 13px;
+            margin-top: 4px;
+            opacity: 0.85;
+        }
+
+        .ballot-card-body {
+            padding: 25px;
+        }
+
+        .instructions {
+            background-color: #f8f8f8;
+            border-left: 4px solid #1a1a6e;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #444;
+            line-height: 1.6;
+        }
+
+        .candidate-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .candidate-row:last-child {
+            border-bottom: none;
+        }
+
+        .candidate-info {
+            flex: 1;
+        }
+
+        .candidate-name {
+            font-size: 15px;
+            font-weight: bold;
+            color: #222;
+        }
+
+        .candidate-party {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .preference-input {
+            width: 55px;
+            padding: 8px;
+            text-align: center;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 15px;
+        }
+
+        .preference-input:focus {
+            outline: none;
+            border-color: #1a1a6e;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #1a1a6e;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 15px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .submit-btn:hover {
+            background-color: #2a2a9e;
+        }
+
+        .message {
+            padding: 10px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .message.error {
+            background-color: #fde8e8;
+            color: #c0392b;
+            border-left: 4px solid #c0392b;
+        }
+
+        .message.success {
+            background-color: #e8f5e9;
+            color: #27ae60;
+            border-left: 4px solid #27ae60;
+        }
+
+        .receipt-box {
+            background-color: #f8f8f8;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 13px;
+            display: none;
+        }
+
+        .receipt-box p {
+            margin-bottom: 6px;
+            color: #444;
+        }
+
+        .receipt-token {
+            font-family: monospace;
+            word-break: break-all;
+            color: #1a1a6e;
+            font-weight: bold;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 15px;
+            font-size: 12px;
+            color: #888;
+            background-color: #e8e8e8;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div>
+            <h1>Australian Electoral Commission</h1>
+            <p>Electronic Voting Platform</p>
+        </div>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+
+    <div class="main">
+        <div class="ballot-card">
+
+            <div class="ballot-card-header">
+                <h2>House of Representatives Ballot</h2>
+                <p>Number each candidate in order of your preference</p>
+            </div>
+
+            <div class="ballot-card-body">
+
+                <div class="instructions">
+                    <strong>How to vote:</strong> Write the number 1 in the box next to your first choice,
+                    the number 2 next to your second choice, and so on until you have numbered every candidate.
+                    You must number every box.
+                </div>
+
+                <div id="message" class="message"></div>
+
+                <form id="ballot-form">
+                    <div id="candidates-list">
+                        <!-- Candidates are loaded here by JavaScript -->
+                        <p style="color:#888; font-size:14px;">Loading candidates...</p>
+                    </div>
+
+                    <button type="submit" class="submit-btn">Submit Ballot</button>
+                </form>
+
+                <!-- Receipt shown after successful submission -->
+                <div class="receipt-box" id="receipt-box">
+                    <p><strong>Your ballot has been recorded.</strong></p>
+                    <p>Please save your receipt token below. You can use it to verify your ballot was counted.</p>
+                    <p class="receipt-token" id="receipt-token"></p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        &copy; 2024 Australian Electoral Commission. This is a prototype system for educational purposes.
+    </div>
+
+    <script>
+        // Check voter is logged in when page loads
+        // SR-03: Only logged in voters can see this page
+        const token = sessionStorage.getItem('voter_token')
+        if (!token) {
+            window.location.href = '/'
+        }
+
+        // Load candidates when page loads
+        window.onload = function() {
+            loadCandidates()
+        }
+
+        async function loadCandidates() {
+            // For the prototype we use sample candidates
+            // In production these would be loaded from the database
+            const candidates = [
+                { id: 1, name: 'Jane Smith', party: 'Australian Labor Party' },
+                { id: 2, name: 'John Brown', party: 'Liberal Party of Australia' },
+                { id: 3, name: 'Sarah Lee', party: 'Australian Greens' },
+                { id: 4, name: 'Mike Davis', party: 'Independent' }
+            ]
+
+            const list = document.getElementById('candidates-list')
+            list.innerHTML = ''
+
+            candidates.forEach(candidate => {
+                list.innerHTML += `
+                    <div class="candidate-row">
+                        <div class="candidate-info">
+                            <div class="candidate-name">${candidate.name}</div>
+                            <div class="candidate-party">${candidate.party}</div>
+                        </div>
+                        <input
+                            type="number"
+                            class="preference-input"
+                            id="pref_${candidate.id}"
+                            min="1"
+                            max="${candidates.length}"
+                            placeholder="#">
+                    </div>
+                `
+            })
+        }
+
+        document.getElementById('ballot-form').addEventListener('submit', async function(e) {
+            e.preventDefault()
+
+            // Collect all preferences entered by the voter
+            const preferences = {}
+            const inputs = document.querySelectorAll('.preference-input')
+
+            inputs.forEach(input => {
+                const candidateId = input.id.replace('pref_', '')
+                const value = parseInt(input.value)
+                if (!isNaN(value)) {
+                    preferences[candidateId] = value
+                }
+            })
+
+            try {
+                const response = await fetch('/api/ballot/cast', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ preferences })
+                })
+
+                const result = await response.json()
+
+                if (response.ok) {
+                    // Show success message and receipt
+                    showMessage('Your ballot has been submitted successfully', 'success')
+                    document.getElementById('ballot-form').style.display = 'none'
+                    document.getElementById('receipt-box').style.display = 'block'
+                    document.getElementById('receipt-token').textContent = result.receipt_token
+
+                    // Clear the session token after voting (SR-17)
+                    sessionStorage.removeItem('voter_token')
+                } else {
+                    showMessage(result.error, 'error')
+                }
+
+            } catch (error) {
+                showMessage('Something went wrong. Please try again.', 'error')
+            }
+        })
+
+        function logout() {
+            sessionStorage.removeItem('voter_token')
+            window.location.href = '/'
+        }
+
+        function showMessage(text, type) {
+            const box = document.getElementById('message')
+            box.textContent = text
+            box.className = 'message ' + type
+            box.style.display = 'block'
+        }
+    </script>
+
+</body>
+</html>

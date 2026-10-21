@@ -76,5 +76,6 @@ if __name__ == '__main__':
         from models.admin_user import AdminUser
         from models.ballot import Ballot, BallotHash
         from models.candidate import Candidate
+        from models.audit_log import AuditLog
         db.create_all()
     app.run(debug=False, host='127.0.0.1', port=5000)
