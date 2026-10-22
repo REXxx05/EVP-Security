@@ -4,12 +4,15 @@ import pyotp
 from datetime import datetime, timezone, timedelta
 from flask import Blueprint, request, jsonify, current_app
 from middleware.authenticate import token_required
+from extensions import limiter
+from middleware.rate_limiter import LOGIN_LIMIT
 
 # Auth routes handle voter and admin login
 auth_bp = Blueprint('auth', __name__)
 
 
 @auth_bp.route('/voter/login', methods=['POST'])
+@limiter.limit(LOGIN_LIMIT)
 def voter_login():
     # Handles voter login and issues a JWT session token
     # SR-07: Checks voter is enrolled before giving access
@@ -62,6 +65,7 @@ def voter_logout():
 
 
 @auth_bp.route('/admin/login', methods=['POST'])
+@limiter.limit(LOGIN_LIMIT)
 def admin_login():
     # Admin login requires username, password AND a TOTP code
     # SR-10: Two factor authentication for all admin accounts
