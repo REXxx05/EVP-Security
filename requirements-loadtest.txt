@@ -1,0 +1,2 @@
+# extra package for the load test (SR-20)
+locust>=2.29

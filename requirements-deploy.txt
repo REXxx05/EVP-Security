@@ -1,0 +1,4 @@
+# extra packages for running the app on a Linux server (SR-20)
+# kept apart from requirements.txt because gunicorn does not run on Windows
+gunicorn>=22.0
+gevent>=24.2
