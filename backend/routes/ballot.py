@@ -116,6 +116,10 @@ def cast_ballot():
     voter.has_voted = True
     db.session.commit()
 
+    # SR-17: Revoke the session token immediately after ballot submission
+    from middleware.authenticate import revoke_token
+    revoke_token(request.token_hash)
+
     # SR-15: Return receipt to voter as proof their ballot was received
     return jsonify({
         'message': 'Your ballot has been submitted successfully',

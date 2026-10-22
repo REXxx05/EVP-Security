@@ -55,7 +55,9 @@ def voter_login():
 @auth_bp.route('/voter/logout', methods=['POST'])
 @token_required
 def voter_logout():
-    # Logs the voter out by telling the client to delete their token
+    # SR-17: Revoke token immediately on logout
+    from middleware.authenticate import revoke_token
+    revoke_token(request.token_hash)
     return jsonify({'message': 'You have been logged out successfully'}), 200
 
 
