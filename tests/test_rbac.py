@@ -100,3 +100,22 @@ def test_denial_completes_within_one_second(app):
         assert time.perf_counter() - start < 1.0
     finally:
         ctx.pop()
+
+
+#appended code segment   
+
+def test_admin_id_is_used_when_there_is_no_voter_id(app):
+    # admin tokens carry admin_id, not voter_id. the log must still say who it was
+    ctx = _as(app, {"admin_id": 7, "role": "voter"})
+    try:
+        rbac._check((rbac.ROLE_ADMIN,))
+        row = AuditLog.query.first()
+        assert row.actor_pseudonym != "anonymous"
+    finally:
+        ctx.pop()
+
+
+def test_actor_id_prefixes_admin_ids():
+    assert rbac.actor_id({"admin_id": 7}) == "admin:7"
+    assert rbac.actor_id({"voter_id": "VOTER001"}) == "VOTER001"
+    assert rbac.actor_id({}) is None
