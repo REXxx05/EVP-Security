@@ -51,7 +51,9 @@ def create_app():
     from routes.auth import auth_bp
     from routes.ballot import ballot_bp
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    from routes.admin import admin_bp  
     app.register_blueprint(ballot_bp, url_prefix='/api/ballot')
+    app.register_blueprint(admin_bp, url_prefix='/api/admin')
 
     # Error handlers - we keep messages vague so we dont leak system details
     @app.errorhandler(404)
@@ -78,5 +80,6 @@ if __name__ == '__main__':
         from models.candidate import Candidate
         from models.audit_log import AuditLog
         from models.revoked_token import RevokedToken
+        from models.signed_action import SignedAction, CandidateExclusion
         db.create_all()
     app.run(debug=False, host='127.0.0.1', port=5000)
